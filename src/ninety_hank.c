@@ -272,7 +272,8 @@ static void update_display(struct tm *current_time) {
 	  
 	  if (the_last_hour != display_hour){  //check only every hour
 	  
-	  
+		//vibes_short_pulse(); //Vibrates once per hour
+		
 		 // set_container_image(&day_name_image, day_name_layer, DAY_NAME_IMAGE_RESOURCE_IDS[current_time->tm_wday], GPoint(69, 61));
 		  text_layer_set_text(DayOfWeekLayer, DAY_NAME_LANGUAGE[current_time->tm_wday]); 
 		 
@@ -549,6 +550,10 @@ static void deinit(void) {
     gbitmap_destroy(time_digits_images[i]);
     bitmap_layer_destroy(time_digits_layers[i]);
   }
+  battery_state_service_unsubscribe();
+  bluetooth_connection_service_unsubscribe();
+  tick_timer_service_unsubscribe();
+  window_destroy( window );
 }
 
 int main(void) {
