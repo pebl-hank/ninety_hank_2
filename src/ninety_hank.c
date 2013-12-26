@@ -22,7 +22,8 @@ static TextLayer *cwLayer;
 static TextLayer *text_addTimeZone1_layer; 
 static TextLayer *text_sunrise_layer; 
 static TextLayer *text_sunset_layer; 
-
+TextLayer *battery_layer;
+TextLayer *connection_layer;
 
 
 
@@ -202,6 +203,31 @@ void updateSunsetSunrise()
 	text_layer_set_text(text_sunset_layer, sunset_text);
 }
 
+static void handle_battery(BatteryChargeState charge_state) {
+  static char battery_text[] = "100%";
+
+  if (charge_state.is_charging) {
+    snprintf(battery_text, sizeof(battery_text), "c");
+  } else {
+    snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent);
+  }
+  text_layer_set_text(battery_layer, battery_text);
+}
+
+// Called once per second
+static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
+  //static char time_text[] = "00:00:00"; // Needs to be static because it's used by the system later.
+
+  //strftime(time_text, sizeof(time_text), "%T", tick_time);
+  //text_layer_set_text(time_layer, time_text);
+
+  handle_battery(battery_state_service_peek());
+}
+
+static void handle_bluetooth(bool connected) {
+  text_layer_set_text(connection_layer, connected ? "BT" : "no BT");
+}
+
 unsigned short the_last_hour = 25;
 
 static void update_display(struct tm *current_time) {
@@ -365,6 +391,24 @@ static void init(void) {
   text_layer_set_font(text_sunset_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(text_sunset_layer));      
   
+  // Connection
+  connection_layer = text_layer_create(GRect(60, 152, /* width */ 50, 34 /* height */));
+  text_layer_set_text_color(connection_layer, GColorWhite);
+  text_layer_set_background_color(connection_layer, GColorClear);
+  text_layer_set_font(connection_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_text_alignment(connection_layer, GTextAlignmentCenter);
+  text_layer_set_text(connection_layer, "BT");
+  layer_add_child(window_layer, text_layer_get_layer(connection_layer));  
+
+  // Battery state
+  battery_layer = text_layer_create(GRect(40, 152, /* width */ 50, 34 /* height */));
+  text_layer_set_text_color(battery_layer, GColorWhite);
+  text_layer_set_background_color(battery_layer, GColorClear);
+  text_layer_set_font(battery_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  text_layer_set_text_alignment(battery_layer, GTextAlignmentLeft);
+  text_layer_set_text(battery_layer, "100%");  
+  layer_add_child(window_layer, text_layer_get_layer(battery_layer));  
+  
   if (!clock_is_24h_style()) {
     time_format_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_24_HOUR_MODE);
     GRect frame = (GRect) {
@@ -403,6 +447,15 @@ static void init(void) {
   update_display(tick_time);
 
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+  
+  // Second tick
+  handle_second_tick(tick_time, SECOND_UNIT);
+
+  tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
+  battery_state_service_subscribe(&handle_battery);
+  bluetooth_connection_service_subscribe(&handle_bluetooth);
+  // Second tick
+
 }
 
 
@@ -425,6 +478,8 @@ static void deinit(void) {
   text_layer_destroy(text_addTimeZone1_layer);
   text_layer_destroy(text_sunrise_layer);
   text_layer_destroy(text_sunset_layer);  
+  text_layer_destroy(connection_layer);
+  text_layer_destroy(battery_layer);  
  
   for (int i = 0; i < TOTAL_DATE_DIGITS; i++) {
     layer_remove_from_parent(bitmap_layer_get_layer(date_digits_layers[i]));
