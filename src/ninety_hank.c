@@ -326,42 +326,42 @@ static void init(void) {
    // Day of week text
   DayOfWeekLayer = text_layer_create(GRect(35, 62, 40 /* width */, 30 /* height */));
   text_layer_set_text_color(DayOfWeekLayer, GColorWhite);
-  text_layer_set_background_color(DayOfWeekLayer, GColorBlack);
+  text_layer_set_background_color(DayOfWeekLayer, GColorClear );
   text_layer_set_font(DayOfWeekLayer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   layer_add_child(window_layer, text_layer_get_layer(DayOfWeekLayer));
   
    // Moon Text
   moonLayer = text_layer_create(GRect(2, 25, 50 /* width */, 30 /* height */)); 
   text_layer_set_text_color(moonLayer, GColorWhite);
-  text_layer_set_background_color(moonLayer, GColorBlack);
+  text_layer_set_background_color(moonLayer, GColorClear );
   text_layer_set_font(moonLayer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(moonLayer));  
   
    // Calendar Week
   cwLayer = text_layer_create(GRect(2, 40, 80 /* width */, 30 /* height */)); 
   text_layer_set_text_color(cwLayer, GColorWhite);
-  text_layer_set_background_color(cwLayer, GColorBlack);
+  text_layer_set_background_color(cwLayer, GColorClear );
   text_layer_set_font(cwLayer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(cwLayer));  
   
   // Text for Additional Time Zone 1
   text_addTimeZone1_layer = text_layer_create(GRect(51, 6, 100 /* width */, 30 /* height */)); 
   text_layer_set_text_color(text_addTimeZone1_layer, GColorWhite);
-  text_layer_set_background_color(text_addTimeZone1_layer, GColorBlack);
+  text_layer_set_background_color(text_addTimeZone1_layer, GColorClear );
   text_layer_set_font(text_addTimeZone1_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(text_addTimeZone1_layer));   
   
   // Sunrise Text
   text_sunrise_layer = text_layer_create(GRect(7, 152, 50 /* width */, 30 /* height */)); 
   text_layer_set_text_color(text_sunrise_layer, GColorWhite);
-  text_layer_set_background_color(text_sunrise_layer, GColorBlack);
+  text_layer_set_background_color(text_sunrise_layer, GColorClear );
   text_layer_set_font(text_sunrise_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(text_sunrise_layer));     
   
   // Sunset Text
   text_sunset_layer = text_layer_create(GRect(110, 152, 50 /* width */, 30 /* height */)); 
   text_layer_set_text_color(text_sunset_layer, GColorWhite);
-  text_layer_set_background_color(text_sunset_layer, GColorBlack);
+  text_layer_set_background_color(text_sunset_layer, GColorClear );
   text_layer_set_font(text_sunset_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(text_sunset_layer));      
   
