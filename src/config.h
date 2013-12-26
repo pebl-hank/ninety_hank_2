@@ -9,7 +9,9 @@
 
 // ----- Additional time zones to display on the top right
 #define AdditionalTimezone_1 -7 						// Timezone offest
+#define AdditionalTimezone_2 +7 						// Timezone offest
 static char AdditionalTimezone_1_Description[] = "CDT"; // Timezone name to display
+static char AdditionalTimezone_2_Description[] = "HME"; // Timezone name to display
 // ----- Additional time zones to display on the top right
 
 

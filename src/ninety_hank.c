@@ -20,6 +20,7 @@ static TextLayer *DayOfWeekLayer;
 static TextLayer *moonLayer; 
 static TextLayer *cwLayer; 
 static TextLayer *text_addTimeZone1_layer; 
+static TextLayer *text_addTimeZone2_layer; 
 static TextLayer *text_sunrise_layer; 
 static TextLayer *text_sunset_layer; 
 static TextLayer *battery_layer;
@@ -73,7 +74,7 @@ const int MOON_IMAGE_RESOURCE_IDS[] = {
 };
 
 
-#define TOTAL_DATE_DIGITS 8
+#define TOTAL_DATE_DIGITS 12
 static GBitmap *date_digits_images[TOTAL_DATE_DIGITS];
 static BitmapLayer *date_digits_layers[TOTAL_DATE_DIGITS];
 
@@ -257,7 +258,16 @@ static void update_display(struct tm *current_time) {
 	  set_container_image(&date_digits_images[7], date_digits_layers[7], DATENUM_IMAGE_RESOURCE_IDS[current_time->tm_min%10], GPoint(121, 5));  
 	  // ======== Time Zone 1   
 	  
-	  
+	  // ======== Time Zone 2  
+	  text_layer_set_text(text_addTimeZone2_layer, AdditionalTimezone_2_Description); 
+	  short  display_hour_tz2 = display_hour AdditionalTimezone_2;
+	  if (display_hour_tz2 > 24) display_hour_tz2 -= 24;
+	  if (display_hour_tz2 < 0) display_hour_tz2 += 24;
+	  set_container_image(&date_digits_images[8], date_digits_layers[8], DATENUM_IMAGE_RESOURCE_IDS[display_hour_tz2/10], GPoint(75, 26));
+	  set_container_image(&date_digits_images[9], date_digits_layers[9], DATENUM_IMAGE_RESOURCE_IDS[display_hour_tz2%10], GPoint(88, 26));  
+	  set_container_image(&date_digits_images[10], date_digits_layers[10], DATENUM_IMAGE_RESOURCE_IDS[current_time->tm_min/10], GPoint(108, 26));
+	  set_container_image(&date_digits_images[11], date_digits_layers[11], DATENUM_IMAGE_RESOURCE_IDS[current_time->tm_min%10], GPoint(121, 26));  
+	  // ======== Time Zone 2 	  
 
 	  
 	  if (the_last_hour != display_hour){  //check only every hour
@@ -340,8 +350,6 @@ static void init(void) {
   memset(&time_digits_images, 0, sizeof(time_digits_images));
   memset(&date_digits_layers, 0, sizeof(date_digits_layers));
   memset(&date_digits_images, 0, sizeof(date_digits_images));
-  
-  
   memset(&moon_digits_layers, 0, sizeof(moon_digits_layers));
   memset(&moon_digits_images, 0, sizeof(moon_digits_images));
   
@@ -386,6 +394,13 @@ static void init(void) {
   text_layer_set_background_color(text_addTimeZone1_layer, GColorClear );
   text_layer_set_font(text_addTimeZone1_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(text_addTimeZone1_layer));   
+  
+  // Text for Additional Time Zone 2
+  text_addTimeZone2_layer = text_layer_create(GRect(51, 26, 100 /* width */, 30 /* height */)); 
+  text_layer_set_text_color(text_addTimeZone2_layer, GColorWhite);
+  text_layer_set_background_color(text_addTimeZone2_layer, GColorClear );
+  text_layer_set_font(text_addTimeZone2_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  layer_add_child(window_layer, text_layer_get_layer(text_addTimeZone2_layer));  
   
   // Sunrise Text
   text_sunrise_layer = text_layer_create(GRect(7, 152, 50 /* width */, 30 /* height */)); 
@@ -473,14 +488,14 @@ static void init(void) {
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
 
-  update_display(tick_time);
+ // update_display(tick_time); // causes wrong time displayed initially
 
 
   
   // Second tick
   handle_second_tick(tick_time, SECOND_UNIT);
-
   tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
+  
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
   // Second tick
@@ -505,6 +520,7 @@ static void deinit(void) {
   text_layer_destroy(moonLayer);
   text_layer_destroy(cwLayer);
   text_layer_destroy(text_addTimeZone1_layer);
+  text_layer_destroy(text_addTimeZone2_layer);  
   text_layer_destroy(text_sunrise_layer);
   text_layer_destroy(text_sunset_layer);  
   text_layer_destroy(connection_layer);
