@@ -22,8 +22,10 @@ static TextLayer *cwLayer;
 static TextLayer *text_addTimeZone1_layer; 
 static TextLayer *text_sunrise_layer; 
 static TextLayer *text_sunset_layer; 
-TextLayer *battery_layer;
-TextLayer *connection_layer;
+static TextLayer *battery_layer;
+static TextLayer *connection_layer;
+static TextLayer *second_layer1;
+static TextLayer *second_layer2;
 
 
 
@@ -154,6 +156,7 @@ int moon_phase(int y, int m, int d)
 void adjustTimezone(float* time) 
 {
   *time += TIMEZONE;
+  *time = *time - 1; // Winter Time - quick&dirty fix
   if (*time > 24) *time -= 24;
   if (*time < 0) *time += 24;
 }
@@ -216,10 +219,12 @@ static void handle_battery(BatteryChargeState charge_state) {
 
 // Called once per second
 static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
-  //static char time_text[] = "00:00:00"; // Needs to be static because it's used by the system later.
+  //static char time_text[] = "00";
 
-  //strftime(time_text, sizeof(time_text), "%T", tick_time);
-  //text_layer_set_text(time_layer, time_text);
+  //strftime(time_text, sizeof(time_text), "%S", tick_time);
+
+  //text_layer_set_text(second_layer1, time_text);
+  //text_layer_set_text(second_layer2, time_text);
 
   handle_battery(battery_state_service_peek());
 }
@@ -409,6 +414,21 @@ static void init(void) {
   text_layer_set_text(battery_layer, "100%");  
   layer_add_child(window_layer, text_layer_get_layer(battery_layer));  
   
+  
+  // Second Layers
+  second_layer1 = text_layer_create(GRect(110, 25, 50 /* width */, 30 /* height */)); 
+  text_layer_set_text_color(second_layer1, GColorWhite);
+  text_layer_set_background_color(second_layer1, GColorClear );
+  text_layer_set_font(second_layer1, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  layer_add_child(window_layer, text_layer_get_layer(second_layer1));      
+  second_layer2 = text_layer_create(GRect(110, 50, 50 /* width */, 30 /* height */)); 
+  text_layer_set_text_color(second_layer2, GColorWhite);
+  text_layer_set_background_color(second_layer2, GColorClear );
+  text_layer_set_font(second_layer2, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+  layer_add_child(window_layer, text_layer_get_layer(second_layer2));      
+  
+  
+  
   if (!clock_is_24h_style()) {
     time_format_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_24_HOUR_MODE);
     GRect frame = (GRect) {
@@ -480,6 +500,9 @@ static void deinit(void) {
   text_layer_destroy(text_sunset_layer);  
   text_layer_destroy(connection_layer);
   text_layer_destroy(battery_layer);  
+  text_layer_destroy(second_layer1);  
+  text_layer_destroy(second_layer2);    
+  
  
   for (int i = 0; i < TOTAL_DATE_DIGITS; i++) {
     layer_remove_from_parent(bitmap_layer_get_layer(date_digits_layers[i]));
