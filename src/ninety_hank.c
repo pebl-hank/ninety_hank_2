@@ -28,7 +28,7 @@ static TextLayer *connection_layer;
 static TextLayer *second_layer1;
 static TextLayer *second_layer2;
 
-
+static bool initDone; // e.g. for avoiding "no BT" vibration with initial opening of the watchface
 
 
 const int DAY_NAME_IMAGE_RESOURCE_IDS[] = {
@@ -211,7 +211,7 @@ static void handle_battery(BatteryChargeState charge_state) {
   static char battery_text[] = "100%";
 
   if (charge_state.is_charging) {
-    snprintf(battery_text, sizeof(battery_text), "c");
+    snprintf(battery_text, sizeof(battery_text), "C");
   } else {
     snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent + 10);
   }
@@ -221,7 +221,7 @@ static void handle_battery(BatteryChargeState charge_state) {
 
 
 static void handle_bluetooth(bool connected) {
-  if( !connected )
+  if( !connected && initDone)
   {
     vibes_short_pulse();
   }
@@ -244,8 +244,6 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
   time_text2[0] = time_text[1];
   text_layer_set_text(second_layer1, time_text1);
   text_layer_set_text(second_layer2, time_text2);
-
-  handle_battery(battery_state_service_peek());
 
   unsigned short display_minute = current_time->tm_min;
   if (the_last_minute != display_minute){  //check only every minute
@@ -347,6 +345,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 }
 
 static void init(void) {
+  initDone = false;
   memset(&time_digits_layers, 0, sizeof(time_digits_layers));
   memset(&time_digits_images, 0, sizeof(time_digits_images));
   memset(&date_digits_layers, 0, sizeof(date_digits_layers));
@@ -498,10 +497,13 @@ static void init(void) {
   tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
   
   battery_state_service_subscribe(&handle_battery);
+  handle_battery(battery_state_service_peek());
+  
+  handle_bluetooth(bluetooth_connection_service_peek());
   bluetooth_connection_service_subscribe(&handle_bluetooth);
 
   // Second tick
-
+  initDone = true;
 }
 
 
