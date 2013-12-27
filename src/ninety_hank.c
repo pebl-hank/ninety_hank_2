@@ -213,7 +213,7 @@ static void handle_battery(BatteryChargeState charge_state) {
   if (charge_state.is_charging) {
     snprintf(battery_text, sizeof(battery_text), "c");
   } else {
-    snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent);
+    snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent + 10);
   }
   text_layer_set_text(battery_layer, battery_text);
 }
@@ -221,16 +221,31 @@ static void handle_battery(BatteryChargeState charge_state) {
 
 
 static void handle_bluetooth(bool connected) {
+  if( !connected )
+  {
+    vibes_double_pulse();
+  }
   text_layer_set_text(connection_layer, connected ? "BT" : "no BT");
 }
-
 
 
 
 unsigned short the_last_hour = 25;
 unsigned short the_last_minute = 61;
 
-static void update_display(struct tm *current_time) {
+// Called once per second
+static void handle_second_tick(struct tm* current_time, TimeUnits units_changed) {
+   static char time_text[] = "00";
+  static char time_text1[] = "0";
+  static char time_text2[] = "0";
+  
+  strftime(time_text, sizeof(time_text), "%S", current_time);
+  time_text1[0] = time_text[0];
+  time_text2[0] = time_text[1];
+  text_layer_set_text(second_layer1, time_text1);
+  text_layer_set_text(second_layer2, time_text2);
+
+  handle_battery(battery_state_service_peek());
 
   unsigned short display_minute = current_time->tm_min;
   if (the_last_minute != display_minute){  //check only every minute
@@ -328,22 +343,7 @@ static void update_display(struct tm *current_time) {
 	  the_last_hour = display_hour;
 	  updateSunsetSunrise();
 	}
-}
 
-// Called once per second
-static void handle_second_tick(struct tm* tick_time, TimeUnits units_changed) {
-   static char time_text[] = "00";
-  static char time_text1[] = "0";
-  static char time_text2[] = "0";
-  
-  strftime(time_text, sizeof(time_text), "%S", tick_time);
-  time_text1[0] = time_text[0];
-  time_text2[0] = time_text[1];
-  text_layer_set_text(second_layer1, time_text1);
-  text_layer_set_text(second_layer2, time_text2);
-
-  handle_battery(battery_state_service_peek());
-  update_display(tick_time);
 }
 
 static void init(void) {
@@ -499,6 +499,7 @@ static void init(void) {
   
   battery_state_service_subscribe(&handle_battery);
   bluetooth_connection_service_subscribe(&handle_bluetooth);
+
   // Second tick
 
 }
