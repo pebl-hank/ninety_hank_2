@@ -223,7 +223,7 @@ static void handle_battery(BatteryChargeState charge_state) {
 static void handle_bluetooth(bool connected) {
   if( !connected )
   {
-    vibes_double_pulse();
+    vibes_short_pulse();
   }
   text_layer_set_text(connection_layer, connected ? "BT" : "no BT");
 }
