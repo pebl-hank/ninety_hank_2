@@ -213,7 +213,7 @@ static void handle_battery(BatteryChargeState charge_state) {
   if (charge_state.is_charging) {
     snprintf(battery_text, sizeof(battery_text), "C");
   } else {
-    snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent + 10);
+    snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent);
   }
   text_layer_set_text(battery_layer, battery_text);
 }
@@ -223,7 +223,7 @@ static void handle_battery(BatteryChargeState charge_state) {
 static void handle_bluetooth(bool connected) {
   if( !connected && initDone)
   {
-    vibes_short_pulse();
+  //  vibes_short_pulse();
   }
   text_layer_set_text(connection_layer, connected ? "BT" : "no BT");
 }
