@@ -8,6 +8,8 @@
 #include "suncalc.h"
 
 static Window *window;
+static Layer *window_layer;
+InverterLayer *inv_layer;
 
 static GBitmap *background_image;
 static BitmapLayer *background_layer;
@@ -28,8 +30,55 @@ static TextLayer *connection_layer;
 static TextLayer *second_layer1;
 static TextLayer *second_layer2;
 
-static bool initDone; // e.g. for avoiding "no BT" vibration with initial opening of the watchface
+static AppSync sync;
+static uint8_t sync_buffer[256];
 
+#define SETTINGS_KEY 99
+	
+typedef struct persist {
+	char TZ1Name[4];
+	int TZ1;
+	char TZ2Name[4];
+	int TZ2;
+	int TZSS;	
+	int LATITUDE;
+	int LONGITUDE;
+    int Invert;
+  } __attribute__((__packed__)) persist;
+
+persist settings = {
+	.TZ1Name = "",
+	.TZ1 = 0,
+	.TZ2Name = "",
+	.TZ2 = 0,
+	.TZSS = 0,
+	.LATITUDE=0,
+	.LONGITUDE=0,
+	.Invert = 0
+};
+
+static int valueRead, valueWritten;
+
+static bool appStarted = false;
+
+int AdditionalTimezone_1 = -6; 						// Timezone offest
+int AdditionalTimezone_2 = 6; 						// Timezone offest
+int LATITUDE = 50;
+int LONGITUDE = 8;
+int TIMEZONE = 0;
+
+enum {
+  TZ1Name_KEY = 0x6,	
+  TZ1_KEY = 0x5,
+  TZ2Name_KEY = 0x8,	
+  TZ2_KEY = 0x7,
+  LATITUDE_KEY = 0x9,
+  LONGITUDE_KEY = 0x3,
+  INVERT_KEY = 0x1,
+  TZSS_KEY = 0x4
+};
+
+static bool initDone; // e.g. for avoiding "no BT" vibration with initial opening of the watchface
 
 const int DAY_NAME_IMAGE_RESOURCE_IDS[] = {
   RESOURCE_ID_IMAGE_DAY_NAME_SUN,
@@ -43,7 +92,6 @@ const int DAY_NAME_IMAGE_RESOURCE_IDS[] = {
 
 static GBitmap *day_name_image;
 static BitmapLayer *day_name_layer;
-
 
 const int DATENUM_IMAGE_RESOURCE_IDS[] = {
   RESOURCE_ID_IMAGE_DATENUM_0,
@@ -73,11 +121,9 @@ const int MOON_IMAGE_RESOURCE_IDS[] = {
   RESOURCE_ID_IMAGE_MOON_7
 };
 
-
 #define TOTAL_DATE_DIGITS 12
 static GBitmap *date_digits_images[TOTAL_DATE_DIGITS];
 static BitmapLayer *date_digits_layers[TOTAL_DATE_DIGITS];
-
 
 const int BIG_DIGIT_IMAGE_RESOURCE_IDS[] = {
   RESOURCE_ID_IMAGE_NUM_0,
@@ -91,7 +137,6 @@ const int BIG_DIGIT_IMAGE_RESOURCE_IDS[] = {
   RESOURCE_ID_IMAGE_NUM_8,
   RESOURCE_ID_IMAGE_NUM_9
 };
-
 
 #define TOTAL_TIME_DIGITS 4
 static GBitmap *time_digits_images[TOTAL_TIME_DIGITS];
@@ -113,18 +158,14 @@ static void set_container_image(GBitmap **bmp_image, BitmapLayer *bmp_layer, con
   }
 }
 
-
 static unsigned short get_display_hour(unsigned short hour) {
   if (clock_is_24h_style()) {
     return hour;
   }
-
   unsigned short display_hour = hour % 12;
-
   // Converts "0" to "12"
   return display_hour ? display_hour : 12;
 }
-
 
 int moon_phase(int y, int m, int d)
 {
@@ -162,6 +203,14 @@ void adjustTimezone(float* time)
   if (*time < 0) *time += 24;
 }
 
+static void loadPersistentSettings() {	
+	valueRead = persist_read_data(SETTINGS_KEY, &settings, sizeof(settings));
+}
+
+static void savePersistentSettings() {
+	valueWritten = persist_write_data(SETTINGS_KEY, &settings, sizeof(settings));
+}
+
 void updateSunsetSunrise()
 {
 	// Calculating Sunrise/sunset with courtesy of Michael Ehrmann
@@ -171,8 +220,8 @@ void updateSunsetSunrise()
 	
 	//PblTm pblTime;
 	//get_time(&pblTime);
-  time_t now = time(NULL);
-  struct tm *current_time = localtime(&now);
+    time_t now = time(NULL);
+    struct tm *current_time = localtime(&now);
 
 	char *time_format;
 
@@ -218,8 +267,6 @@ static void handle_battery(BatteryChargeState charge_state) {
   text_layer_set_text(battery_layer, battery_text);
 }
 
-
-
 static void handle_bluetooth(bool connected) {
   if( !connected && initDone)
   {
@@ -227,8 +274,6 @@ static void handle_bluetooth(bool connected) {
   }
   text_layer_set_text(connection_layer, connected ? "BT" : "no BT");
 }
-
-
 
 unsigned short the_last_hour = 25;
 unsigned short the_last_minute = 61;
@@ -250,7 +295,6 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 	  the_last_minute = display_minute;
 	  unsigned short display_hour = get_display_hour(current_time->tm_hour);
 
-
 	  // Hour
 	  set_container_image(&time_digits_images[0], time_digits_layers[0], BIG_DIGIT_IMAGE_RESOURCE_IDS[display_hour/10], GPoint(4, 94));
 	  set_container_image(&time_digits_images[1], time_digits_layers[1], BIG_DIGIT_IMAGE_RESOURCE_IDS[display_hour%10], GPoint(37, 94));
@@ -262,7 +306,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 	  
 	  // ======== Time Zone 1  
 	  text_layer_set_text(text_addTimeZone1_layer, AdditionalTimezone_1_Description); 
-	  short  display_hour_tz1 = display_hour AdditionalTimezone_1;
+	  short  display_hour_tz1 = display_hour + AdditionalTimezone_1;
 	  if (display_hour_tz1 > 24) display_hour_tz1 -= 24;
 	  if (display_hour_tz1 < 0) display_hour_tz1 += 24;
 	  set_container_image(&date_digits_images[4], date_digits_layers[4], DATENUM_IMAGE_RESOURCE_IDS[display_hour_tz1/10], GPoint(75, 5));
@@ -273,7 +317,7 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 	  
 	  // ======== Time Zone 2  
 	  text_layer_set_text(text_addTimeZone2_layer, AdditionalTimezone_2_Description); 
-	  short  display_hour_tz2 = display_hour AdditionalTimezone_2;
+	  short  display_hour_tz2 = display_hour + AdditionalTimezone_2;
 	  if (display_hour_tz2 > 24) display_hour_tz2 -= 24;
 	  if (display_hour_tz2 < 0) display_hour_tz2 += 24;
 	  set_container_image(&date_digits_images[8], date_digits_layers[8], DATENUM_IMAGE_RESOURCE_IDS[display_hour_tz2/10], GPoint(75, 26));
@@ -295,10 +339,8 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 		  set_container_image(&date_digits_images[1], date_digits_layers[1], DATENUM_IMAGE_RESOURCE_IDS[current_time->tm_mday%10], GPoint(day_month_x[0] + 13, 71));
 
 		 // Month
-		 
 		  set_container_image(&date_digits_images[2], date_digits_layers[2], DATENUM_IMAGE_RESOURCE_IDS[(current_time->tm_mon+1)/10], GPoint(day_month_x[1], 71));
 		  set_container_image(&date_digits_images[3], date_digits_layers[3], DATENUM_IMAGE_RESOURCE_IDS[(current_time->tm_mon+1)%10], GPoint(day_month_x[1] + 13, 71));
-		 
 	  
 		  if (!clock_is_24h_style()) {
 			if (current_time->tm_hour >= 12) {
@@ -306,16 +348,12 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 			  set_container_image(&time_format_image, time_format_layer, RESOURCE_ID_IMAGE_PM_MODE, GPoint(10, 78));
 			} else {
 				layer_set_hidden(bitmap_layer_get_layer(time_format_layer), true);
-
-
 			}
 
 			if (display_hour/10 == 0) {
 				layer_set_hidden(bitmap_layer_get_layer(time_digits_layers[0]), true);
 			} else {
 				layer_set_hidden(bitmap_layer_get_layer(time_digits_layers[0]), false);
-
-
 			}
 		  }
 		  
@@ -333,16 +371,109 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 		  strftime(cw_text, sizeof(cw_text), TRANSLATION_CW , current_time);
 		  text_layer_set_text(cwLayer, cw_text); 
 		// ------------------- Calendar week  
-		
 		  
 		} //check only every hour
-	  
 	  
 	  the_last_hour = display_hour;
 	  updateSunsetSunrise();
 	}
-
 }
+
+void change_background() {
+  if(settings.Invert) {
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Setting Inversion");  
+	inv_layer = inverter_layer_create(GRect(0, 0, 144, 168));
+  	layer_add_child(window_layer, (Layer*) inv_layer);  
+  }
+  else {
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Removing Inversion");  	  
+    layer_remove_from_parent(inverter_layer_get_layer(inv_layer));
+  }  
+}
+
+
+static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
+  switch (key) {
+
+    case INVERT_KEY:
+      settings.Invert = new_tuple->value->uint8;
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "invert pressed");
+      change_background();
+    break;
+	  
+    case TZ1_KEY:
+      settings.TZ1 = new_tuple->value->int8;
+	  AdditionalTimezone_1 = settings.TZ1;
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "AdditionalTimezone_1 changed to %i",settings.TZ1);
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen
+    break;	  
+	  
+    case TZ1Name_KEY:
+	 // Timezone 1 name to display
+	  memcpy(settings.TZ1Name, new_tuple->value->cstring, new_tuple->length); 
+	  memcpy(AdditionalTimezone_1_Description, settings.TZ1Name,sizeof(AdditionalTimezone_1_Description)); 
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "AdditionalTimezone_1_Description - TZ1Name2: %s", settings.TZ1Name);
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen
+    break;	  
+	
+    case TZ2_KEY:
+      settings.TZ2 = new_tuple->value->int8;
+      AdditionalTimezone_2 = settings.TZ2;
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "AdditionalTimezone_2 changed to %i",settings.TZ2);
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen
+    break;	  
+	  
+    case TZ2Name_KEY:
+	 // Timezone 1 name to display
+	  memcpy(settings.TZ2Name, new_tuple->value->cstring, new_tuple->length); 
+	  memcpy(AdditionalTimezone_2_Description, settings.TZ2Name,sizeof(AdditionalTimezone_2_Description)); 
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "AdditionalTimezone_2_Description - TZ1Name2: %s", settings.TZ2Name);
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen
+    break;	 
+	  
+    case LATITUDE_KEY:
+	  //settings.LATITUDE = new_tuple->value->int16;
+	 // settings.LATITUDE = (float)(new_tuple->value->int16/10000);
+	 // APP_LOG(APP_LOG_LEVEL_DEBUG, "LATITUDE: %e", settings.LATITUDE);
+	  
+	  settings.LATITUDE = new_tuple->value->int8;
+	  //settings.mLATITUDE = settings.mLATITUDE/100000;
+	  LATITUDE = settings.LATITUDE;
+	  //settings.LATITUDE = 50;
+ 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "LATITUDE: %i", settings.LATITUDE);	  
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen
+    break;	  
+
+    case LONGITUDE_KEY:
+	//   settings.mLONGITUDE = (float)(new_tuple->value->int32);
+	//  settings.mLONGITUDE = settings.mLONGITUDE/100000;
+	//  LONGITUDE = settings.mLONGITUDE;
+ 	//  APP_LOG(APP_LOG_LEVEL_DEBUG, "mLONGITUDE: %g", settings.mLONGITUDE);
+
+	  settings.LONGITUDE = new_tuple->value->int8;
+	  LONGITUDE = settings.LONGITUDE;
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "LONGITUDE: %i", settings.LONGITUDE);
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen
+    break;	  
+	  
+    case TZSS_KEY:
+      settings.TZSS = new_tuple->value->int8;
+      TIMEZONE = settings.TZSS;
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "TZSS Pressed: %i", settings.TZSS);
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen	  
+    break;	  
+	  
+	
+  }
+}
+
 
 static void init(void) {
   initDone = false;
@@ -353,19 +484,25 @@ static void init(void) {
   memset(&moon_digits_layers, 0, sizeof(moon_digits_layers));
   memset(&moon_digits_images, 0, sizeof(moon_digits_images));
   
+  const int inbound_size = 256;
+  const int outbound_size = 256;
+  app_message_open(inbound_size, outbound_size);  
 
   window = window_create();
   if (window == NULL) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "OOM: couldn't allocate window");
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "OOM: couldn't allocate window");
       return;
   }
   window_stack_push(window, true /* Animated */);
-  Layer *window_layer = window_get_root_layer(window);
+  window_layer = window_get_root_layer(window);
+  
+  loadPersistentSettings();	
 
   background_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND);
   background_layer = bitmap_layer_create(layer_get_frame(window_layer));
   bitmap_layer_set_bitmap(background_layer, background_image);
   layer_add_child(window_layer, bitmap_layer_get_layer(background_layer));
+	
 
    // Day of week text
   DayOfWeekLayer = text_layer_create(GRect(35, 62, 40 /* width */, 30 /* height */));
@@ -435,10 +572,6 @@ static void init(void) {
   layer_add_child(window_layer, text_layer_get_layer(battery_layer));  
   
   
-    
-  
-  
-  
   if (!clock_is_24h_style()) {
     time_format_image = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_24_HOUR_MODE);
     GRect frame = (GRect) {
@@ -482,14 +615,12 @@ static void init(void) {
   text_layer_set_font(second_layer2, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(second_layer2));  
 	
-	
 
   // Avoids a blank screen on watch start.
   time_t now = time(NULL);
   struct tm *tick_time = localtime(&now);
 
- // update_display(tick_time); // causes wrong time displayed initially
-
+  // update_display(tick_time); // causes wrong time displayed initially
 
   
   // Second tick
@@ -501,13 +632,28 @@ static void init(void) {
   
   handle_bluetooth(bluetooth_connection_service_peek());
   bluetooth_connection_service_subscribe(&handle_bluetooth);
-
+	
+  Tuplet initial_values[] = {
+	TupletCString(TZ1Name_KEY, settings.TZ1Name),
+    TupletInteger(TZ1_KEY, settings.TZ1),
+	TupletCString(TZ2Name_KEY, settings.TZ2Name),
+    TupletInteger(TZ2_KEY, settings.TZ2),
+	TupletInteger(TZSS_KEY, settings.TZSS),	  
+	TupletInteger(LATITUDE_KEY, settings.LATITUDE), 	  
+	TupletInteger(LONGITUDE_KEY, settings.LONGITUDE), 
+    TupletInteger(INVERT_KEY, settings.Invert)
+  };  	
+	app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
+				  sync_tuple_changed_callback, NULL, NULL);
+	
   // Second tick
   initDone = true;
 }
 
 
 static void deinit(void) {
+  savePersistentSettings();
+  
   layer_remove_from_parent(bitmap_layer_get_layer(background_layer));
   bitmap_layer_destroy(background_layer);
   gbitmap_destroy(background_image);
@@ -531,7 +677,6 @@ static void deinit(void) {
   text_layer_destroy(battery_layer);  
   text_layer_destroy(second_layer1);  
   text_layer_destroy(second_layer2);    
-  
  
   for (int i = 0; i < TOTAL_DATE_DIGITS; i++) {
     layer_remove_from_parent(bitmap_layer_get_layer(date_digits_layers[i]));
@@ -544,9 +689,6 @@ static void deinit(void) {
     gbitmap_destroy(moon_digits_images[i]);
     bitmap_layer_destroy(moon_digits_layers[i]);
   } 
-  
-
-  
 
   for (int i = 0; i < TOTAL_TIME_DIGITS; i++) {
     layer_remove_from_parent(bitmap_layer_get_layer(time_digits_layers[i]));
@@ -556,6 +698,9 @@ static void deinit(void) {
   battery_state_service_unsubscribe();
   bluetooth_connection_service_unsubscribe();
   tick_timer_service_unsubscribe();
+
+  inverter_layer_destroy(inv_layer);
+	
   window_destroy( window );
 }
 

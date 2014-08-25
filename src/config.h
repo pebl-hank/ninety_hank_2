@@ -1,16 +1,16 @@
 //NOTE: longitude is positive for East and negative for West
-#define LATITUDE    51.0
-#define LONGITUDE 8.0
-#define TIMEZONE +1
+//#define LATITUDE    51.0
+//#define LONGITUDE 8.0
+//#define TIMEZONE +1
 #define DAY_NAME_LANGUAGE DAY_NAME_GERMAN 				// Valid values: DAY_NAME_ENGLISH, DAY_NAME_GERMAN, DAY_NAME_FRENCH
 #define MOONPHASE_NAME_LANGUAGE MOONPHASE_TEXT_GERMAN 	// Valid values: MOONPHASE_TEXT_ENGLISH, MOONPHASE_TEXT_GERMAN, MOONPHASE_TEXT_FRENCH
 #define day_month_x day_month_day_first 				// Valid values: day_month_month_first, day_month_day_first
 #define TRANSLATION_CW "KW%V" 							// Translation for the calendar week (e.g. "CW%V")
 
 // ----- Additional time zones to display on the top right
-#define AdditionalTimezone_1 -7 						// Timezone offest
-#define AdditionalTimezone_2 +7 						// Timezone offest
-static char AdditionalTimezone_1_Description[] = "CDT"; // Timezone name to display
+
+
+static char AdditionalTimezone_1_Description[] = "EDT"; // Timezone name to display
 static char AdditionalTimezone_2_Description[] = "HME"; // Timezone name to display
 // ----- Additional time zones to display on the top right
 
