@@ -31,7 +31,7 @@ static TextLayer *second_layer1;
 static TextLayer *second_layer2;
 
 static AppSync sync;
-static uint8_t sync_buffer[256];
+static uint8_t sync_buffer[384];
 
 #define SETTINGS_KEY 99
 	
@@ -44,6 +44,8 @@ typedef struct persist {
 	int LATITUDE;
 	int LONGITUDE;
     int Invert;
+	int dmy;
+	int lang;
   } __attribute__((__packed__)) persist;
 
 persist settings = {
@@ -54,7 +56,9 @@ persist settings = {
 	.TZSS = 0,
 	.LATITUDE=0,
 	.LONGITUDE=0,
-	.Invert = 0
+	.Invert = 0,
+	.dmy = 0,
+	.lang = 0
 };
 
 static int valueRead, valueWritten;
@@ -67,6 +71,21 @@ int LATITUDE = 50;
 int LONGITUDE = 8;
 int TIMEZONE = 0;
 
+
+int *day_month_x = day_month_day_first;
+/*
+ const char *DAY_NAME_LANGUAGE[] = {
+	"SON",
+	"MON",
+	"DIE",
+	"MIT",
+	"DON",
+	"FRE",
+	"SAM"
+};
+*/
+
+
 enum {
   TZ1Name_KEY = 0x6,	
   TZ1_KEY = 0x5,
@@ -75,7 +94,9 @@ enum {
   LATITUDE_KEY = 0x9,
   LONGITUDE_KEY = 0x3,
   INVERT_KEY = 0x1,
-  TZSS_KEY = 0x4
+  TZSS_KEY = 0x4,
+  DMY_KEY = 0x2,
+  LANG_KEY = 0x0	
 };
 
 static bool initDone; // e.g. for avoiding "no BT" vibration with initial opening of the watchface
@@ -330,9 +351,11 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 	  if (the_last_hour != display_hour){  //check only every hour
 	  
 		//vibes_short_pulse(); //Vibrates once per hour
+		  if (settings.lang < 1) {settings.lang=0;}
+		  if (settings.lang > 3) {settings.lang=0;}
 		
 		 // set_container_image(&day_name_image, day_name_layer, DAY_NAME_IMAGE_RESOURCE_IDS[current_time->tm_wday], GPoint(69, 61));
-		  text_layer_set_text(DayOfWeekLayer, DAY_NAME_LANGUAGE[current_time->tm_wday]); 
+		  text_layer_set_text(DayOfWeekLayer, DAY_NAME[current_time->tm_wday][settings.lang]); 
 		 
 		 //Day
 		  set_container_image(&date_digits_images[0], date_digits_layers[0], DATENUM_IMAGE_RESOURCE_IDS[current_time->tm_mday/10], GPoint(day_month_x[0], 71));
@@ -363,12 +386,12 @@ static void handle_second_tick(struct tm* current_time, TimeUnits units_changed)
 
 			set_container_image(&moon_digits_images[0], moon_digits_layers[0], MOON_IMAGE_RESOURCE_IDS[moonphase_number], GPoint(1, 1));
 		
-			text_layer_set_text(moonLayer, MOONPHASE_NAME_LANGUAGE[moonphase_number]); 
+			text_layer_set_text(moonLayer, MOONPHASE_TEXT[moonphase_number][settings.lang]); 
 		// -------------------- Moon_phase	  
 		  
 		// -------------------- Calendar week  
 		  static char cw_text[] = "XX00";
-		  strftime(cw_text, sizeof(cw_text), TRANSLATION_CW , current_time);
+		  strftime(cw_text, sizeof(cw_text), CW_NAME[settings.lang] , current_time);
 		  text_layer_set_text(cwLayer, cw_text); 
 		// ------------------- Calendar week  
 		  
@@ -470,7 +493,31 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 	  the_last_minute = 61; // Update Screen	  
     break;	  
 	  
-	
+    case DMY_KEY:
+      settings.dmy = new_tuple->value->int8;
+     
+	  if(settings.dmy) {
+		  day_month_x = day_month_day_first;
+		  APP_LOG(APP_LOG_LEVEL_DEBUG, "dmy: yes");
+	  } else {
+		  day_month_x = day_month_month_first;
+		  APP_LOG(APP_LOG_LEVEL_DEBUG, "dmy: no");
+	  }  		  
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen	  
+    break;
+	  
+	  
+   case LANG_KEY:
+	  settings.lang = new_tuple->value->int8;			
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Array test: Day 2 Lang 0: %s", DAY_NAME[2][0]);
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Array test in selected Language: Day 2: %s", DAY_NAME[2][settings.lang]);	 
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Lang: %i", settings.lang);
+	  the_last_hour = 25;   // Update Screen
+	  the_last_minute = 61; // Update Screen
+    break;	  
+	  
+	  
   }
 }
 
@@ -484,8 +531,8 @@ static void init(void) {
   memset(&moon_digits_layers, 0, sizeof(moon_digits_layers));
   memset(&moon_digits_images, 0, sizeof(moon_digits_images));
   
-  const int inbound_size = 256;
-  const int outbound_size = 256;
+  const int inbound_size = 384;
+  const int outbound_size = 384;
   app_message_open(inbound_size, outbound_size);  
 
   window = window_create();
@@ -641,7 +688,9 @@ static void init(void) {
 	TupletInteger(TZSS_KEY, settings.TZSS),	  
 	TupletInteger(LATITUDE_KEY, settings.LATITUDE), 	  
 	TupletInteger(LONGITUDE_KEY, settings.LONGITUDE), 
-    TupletInteger(INVERT_KEY, settings.Invert)
+    TupletInteger(INVERT_KEY, settings.Invert),
+	TupletInteger(DMY_KEY, settings.dmy),
+	TupletInteger(LANG_KEY, settings.lang)
   };  	
 	app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
 				  sync_tuple_changed_callback, NULL, NULL);

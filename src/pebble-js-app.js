@@ -1,7 +1,7 @@
 var mConfig = {};
 
 Pebble.addEventListener("ready", function(e) {
-	console.log("91 Dub v2.0 is ready");
+	console.log("90Hank is ready");
   loadLocalData();
   returnConfigToPebble();
 });
@@ -30,6 +30,8 @@ function saveLocalData(config) {
   localStorage.setItem("LONGITUDE", parseInt(config.LONGITUDE));	
   localStorage.setItem("TZSS", parseInt(config.TZSS));
   localStorage.setItem("invert", parseInt(config.invert)); 
+  localStorage.setItem("dmy", parseInt(config.dmy)); 
+  localStorage.setItem("lang", parseInt(config.lang)); 
   loadLocalData();
 }
 
@@ -42,7 +44,10 @@ function loadLocalData() {
 	mConfig.LONGITUDE = localStorage.getItem("LONGITUDE");
 	mConfig.TZSS = parseInt(localStorage.getItem("TZSS"));
 	mConfig.invert = parseInt(localStorage.getItem("invert"));
+	mConfig.dmy = parseInt(localStorage.getItem("dmy"));
+	mConfig.lang = parseInt(localStorage.getItem("lang"));
 	mConfig.configureUrl = "http://goo.gl/fou7kz";
+	//mConfig.configureUrl = "http://192.168.1.200/90hank/index2.html";
 	
 	if(isNaN(mConfig.TZ1)) {
 		mConfig.TZ1 = 0;
@@ -66,7 +71,13 @@ function loadLocalData() {
 	if(isNaN(mConfig.invert)) {
 		mConfig.invert = 0;
 	}
-  console.log("loadLocalData() " + JSON.stringify(mConfig));
+	if(isNaN(mConfig.dmy)) {
+		mConfig.dmy = 0;
+	}
+	if(isNaN(mConfig.lang)) {
+		mConfig.lang = 0;
+	}
+	console.log("loadLocalData() " + JSON.stringify(mConfig));
 }
 
 function returnConfigToPebble() {
@@ -79,6 +90,8 @@ function returnConfigToPebble() {
 	"TZSS":parseInt(mConfig.TZSS),  
     "LATITUDE":parseInt(mConfig.LATITUDE), 
     "LONGITUDE":parseInt(mConfig.LONGITUDE),   
-    "invert":parseInt(mConfig.invert)
+    "invert":parseInt(mConfig.invert),
+	"dmy":parseInt(mConfig.dmy),
+	"lang":parseInt(mConfig.lang)
   });    
 }

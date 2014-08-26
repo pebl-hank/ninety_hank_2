@@ -7,7 +7,9 @@
         "TZ2": 7,
         "TZ2Name": 8,
         "TZSS": 4,
-        "invert": 1
+        "dmy": 2,
+        "invert": 1,
+        "lang": 0
     },
     "capabilities": [
         "configurable"
@@ -223,7 +225,7 @@
     "shortName": "ninety_hank",
     "uuid": "03cdc57a-559a-4769-8a88-b505eaea114a",
     "versionCode": 2,
-    "versionLabel": "2.1",
+    "versionLabel": "2.2",
     "watchapp": {
         "watchface": true
     }

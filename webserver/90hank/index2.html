@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html manifest="manifest.appcache">
+<head>
+	<title></title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<link href="css/bootstrap-theme.min.css" rel="stylesheet">
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+</head>
+<body>
+    
+    <div class="container">
+	<h3>ninety_hank configuration</h3>
+      <form id="configure-form" class="form-configure well" action="#" method="POST">
+	  
+	      <select name="lang" id="lang" size="1">
+			  <option value="99">-select language-</option>
+			  <option value="0">Deutsch</option>
+			  <option value="1">English</option>
+			  <option value="2">Français</option>
+			</select>
+			  
+		<hr />
+		
+		<h4>Day before month?</h4>
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-primary">
+            <input type="radio" name="dmy" id="dmy1" value="1"> Yes
+          </label>
+          <label class="btn btn-primary">
+            <input type="radio" name="dmy" id="dmy2" value="0"> No
+          </label>
+        </div>			  
+			  
+	   <hr />
+	  
+        <h4>Timezone 1 Name</h4> <input name="TZ1Name" id="TZ1Name" type="text" size="5" maxlength="3">
+		<h4>Timezone 1 Offset</h4>
+		<select id="TZ1" name="TZ1" >
+			<option>-12</option>
+			<option>-11</option>
+			<option>-10</option>
+			<option>-9</option>
+			<option>-8</option>
+			<option>-7</option>
+			<option>-6</option>
+			<option>-5</option>
+			<option>-4</option>
+			<option>-3</option>
+			<option>-2</option>
+			<option>-1</option>
+			<option>0</option>
+			<option>1</option>
+			<option>2</option>
+			<option>3</option>
+			<option>4</option>
+			<option>5</option>
+			<option>6</option>
+			<option>7</option>
+			<option>8</option>
+			<option>9</option>
+			<option>10</option>
+			<option>11</option>
+			<option>12</option>
+		</select>
+		
+        <hr />
+		
+        <h4>Timezone 2 Name</h4> <input name="TZ2Name" id="TZ2Name" type="text" size="5" maxlength="3">
+		<h4>Timezone 2 Offset</h4>
+		<select id="TZ2" name="TZ2" >
+			<option>-12</option>
+			<option>-11</option>
+			<option>-10</option>
+			<option>-9</option>
+			<option>-8</option>
+			<option>-7</option>
+			<option>-6</option>
+			<option>-5</option>
+			<option>-4</option>
+			<option>-3</option>
+			<option>-2</option>
+			<option>-1</option>
+			<option>0</option>
+			<option>1</option>
+			<option>2</option>
+			<option>3</option>
+			<option>4</option>
+			<option>5</option>
+			<option>6</option>
+			<option>7</option>
+			<option>8</option>
+			<option>9</option>
+			<option>10</option>
+			<option>11</option>
+			<option>12</option>
+		</select>
+		
+        <hr />
+		
+		
+	        <h4>LATITUDE</h4> <input name="LATITUDE" id="LATITUDE" type="text" size="5" maxlength="8">
+		 <h4>LONGITUDE</h4> <input name="LONGITUDE" id="LONGITUDE" type="text" size="5" maxlength="8">
+		
+		
+        <hr />	
+		
+				<h4>Time Offset for Sunset/Sunrise</h4>
+		<select id="TZSS" name="TZSS" >
+			<option>-12</option>
+			<option>-11</option>
+			<option>-10</option>
+			<option>-9</option>
+			<option>-8</option>
+			<option>-7</option>
+			<option>-6</option>
+			<option>-5</option>
+			<option>-4</option>
+			<option>-3</option>
+			<option>-2</option>
+			<option>-1</option>
+			<option>0</option>
+			<option>1</option>
+			<option>2</option>
+			<option>3</option>
+			<option>4</option>
+			<option>5</option>
+			<option>6</option>
+			<option>7</option>
+			<option>8</option>
+			<option>9</option>
+			<option>10</option>
+			<option>11</option>
+			<option>12</option>
+		</select>
+
+		
+		<hr />
+        <h4>Invert Screen</h4>
+        <p><small></small></p>
+        <div class="btn-group" data-toggle="buttons">
+          <label class="btn btn-primary">
+            <input type="radio" name="invert" id="invert1" value="1"> Yes
+          </label>
+          <label class="btn btn-primary">
+            <input type="radio" name="invert" id="invert2" value="0"> No
+          </label>
+        </div>
+        <hr />
+        <hr />
+        <div class="clearfix">
+          <input class="btn btn-lg btn-primary btn-block" id="save" type="submit" value="Save"/>
+        </div>
+
+		Do you like the watchface? Then please donate me a beer or two:<br>		
+		<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+		<input type="hidden" name="cmd" value="_donations">
+		<input type="hidden" name="business" value="paypalmicro@kueper.info">
+		<input type="hidden" name="lc" value="DE">
+		<input type="hidden" name="item_name" value="Hank">
+		<input type="hidden" name="no_note" value="0">
+		<input type="hidden" name="currency_code" value="EUR">
+		<input type="hidden" name="bn" value="PP-DonationsBF:btn_donateCC_LG.gif:NonHostedGuest">
+		<input type="image" src="https://www.paypalobjects.com/de_DE/DE/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="Jetzt einfach, schnell und sicher online bezahlen – mit PayPal.">
+		<img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1">
+		</form>
+		
+		
+      </form>
+	  </div>
+
+    
+    <script>
+      var mTZ1;
+      var mInvert;
+	  var mTZ1Name;
+	  var mTZ2;
+	  var mTZ2Name;
+	  var mLATITUDE;
+	  var mLONGITUDE;
+	  var mTZSS;
+	  var mdmy;
+	  var mlang;
+	  
+	  
+      
+      $().ready(function () {
+
+
+		mTZ1Name = localStorage.getItem("TZ1Name");
+		mTZ1 = parseInt(localStorage.getItem("TZ1"));
+		mTZ2Name = localStorage.getItem("TZ2Name");
+		mTZ2 = parseInt(localStorage.getItem("TZ2"));
+		mTZSS = parseInt(localStorage.getItem("TZSS"));
+		mLATITUDE = parseInt(localStorage.getItem("LATITUDE"));
+		//mLATITUDE = mLATITUDE/100000;
+		mLONGITUDE = parseInt(localStorage.getItem("LONGITUDE"));
+	//	mLONGITUDE = mLONGITUDE/100000;
+		
+        mInvert = parseInt(localStorage.getItem("invert"));
+		mdmy = parseInt(localStorage.getItem("dmy"));
+		mlang = parseInt(localStorage.getItem("lang"));
+		
+       // if(isNaN(mTZ1Name)) {
+       //   mTZ1Name = "";
+       // }
+        if(isNaN(mTZ1)) {
+          mTZ1 = 0;
+        }
+//        if(isNaN(mTZ2Name)) {
+  //        mTZ2Name = "";
+    //    }
+	
+        if(isNaN(mLATITUDE)) {
+          mLATITUDE = 50;
+        }	
+		
+        if(isNaN(mLONGITUDE)) {
+          mLONGITUDE = 8;
+        }			
+	
+        if(isNaN(mTZ2)) {
+          mTZ2 = 0;
+        }
+		
+        if(isNaN(mTZSS)) {
+          mTZSS = 0;
+        }
+		
+        if(isNaN(mInvert)) {
+          mInvert = 0;
+        }
+        if(isNaN(mdmy)) {
+          mdmy = 0;
+        }
+        if(isNaN(mlang)) {
+          mlang = 0;
+        }	
+
+		$("#TZ1").val(mTZ1);
+		
+		$("#TZ1Name").val(mTZ1Name);
+
+		$("#TZ2").val(mTZ2);
+		
+		$("#TZSS").val(mTZSS);
+		
+		$("#TZ2Name").val(mTZ2Name);
+        
+		$("#LATITUDE").val(mLATITUDE);
+		
+		$("#LONGITUDE").val(mLONGITUDE);	
+		
+		
+
+		//$("#lang option:selected").text(mlang);
+
+		$( "#lang" ).val(mlang);
+		
+		
+        if(mInvert) {
+          $('#invert1').prop('checked', true);
+          $('#invert1').parent().addClass('active');
+          
+          $('#invert2').prop('checked', false);
+          $('#invert2').parent().removeClass('active');
+        } 
+        else {
+          $('#invert1').prop('checked', false);
+          $('#invert1').parent().removeClass('active');
+          
+          $('#invert2').prop('checked', true);
+          $('#invert2').parent().addClass('active'); 
+        }
+        
+ 		
+        if(mdmy) {
+          $('#dmy1').prop('checked', true);
+          $('#dmy1').parent().addClass('active');
+          
+          $('#dmy2').prop('checked', false);
+          $('#dmy2').parent().removeClass('active');
+        } 
+        else {
+          $('#dmy1').prop('checked', false);
+          $('#dmy1').parent().removeClass('active');
+          
+          $('#dmy2').prop('checked', true);
+          $('#dmy2').parent().addClass('active'); 
+        }       
+        
+        
+		
+
+      });
+
+      $("#configure-form").submit(function(e) {  
+
+		mTZ1 = $("#TZ1").val();  
+		mTZ1Name = $("#TZ1Name").val();
+		
+		mTZ2 = $("#TZ2").val();  
+		mTZ2Name = $("#TZ2Name").val();
+		
+		mTZSS = $("#TZSS").val(); 
+		
+		
+//		mLATITUDE = $("#LATITUDE").val();
+//		mLATITUDE = parseFloat(mLATITUDE) * 100000;
+  mLATITUDE = $("#LATITUDE").val(); //59.12345
+    //mLATITUDE = parseFloat(mLATITUDE) * 100000;  //5912345 (its an int now)
+	
+  mLONGITUDE = $("#LONGITUDE").val(); //59.12345
+    //mLONGITUDE = parseFloat(mLONGITUDE) * 100000;  //5912345 (its an int now)	
+ 
+        mInvert = $('#invert1').prop('checked') ? 1 : 0;
+		mdmy = $('#dmy1').prop('checked') ? 1 : 0;
+		mlang = $( "#lang" ).val() 
+		
+        localStorage.setItem("TZ1", mTZ1);  
+        localStorage.setItem("TZ1Name", mTZ1Name);  
+        localStorage.setItem("TZ2", mTZ2);  
+		
+		localStorage.setItem("TZSS", mTZSS);  
+		
+        localStorage.setItem("TZ2Name", mTZ2Name);  
+	    localStorage.setItem("LATITUDE", mLATITUDE);
+	    localStorage.setItem("LONGITUDE", mLONGITUDE);
+		
+        localStorage.setItem("invert", mInvert); 
+		localStorage.setItem("dmy", mdmy); 
+		localStorage.setItem("lang", mlang);  
+		
+        
+        var j = {
+		  TZ1Name : mTZ1Name,
+          TZ1 : parseInt(mTZ1),
+		  TZ2Name : mTZ2Name,
+          TZ2 : parseInt(mTZ2),
+		    TZSS : parseInt(mTZSS),
+//		  LATITUDE : parseFloat(mLATITUDE.replace(",", ".")),
+       LATITUDE : parseInt(mLATITUDE),
+	    LONGITUDE : parseInt(mLONGITUDE),
+         invert : parseInt(mInvert),
+		 dmy : parseInt(mdmy),
+		 lang : parseInt(mlang)
+		 };
+        
+        window.location.href = "pebblejs://close#" + JSON.stringify(j);
+
+        e.preventDefault();
+      });
+  </script>
+</body>
+</html>
